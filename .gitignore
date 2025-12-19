@@ -1,0 +1,7 @@
+@'
+.env
+*.env
+credentials.json
+__pycache__/
+*.pyc
+'@ | Set_Content .gitignore
