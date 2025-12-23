@@ -2,6 +2,7 @@ import requests, gspread, time, os
 from google.oauth2.service_account import Credentials
 from requests.exceptions import ConnectionError
 from dotenv import load_dotenv
+import pandas as pd
 
 load_dotenv("key.env")
 scope_key = os.getenv("scope_key")
@@ -63,7 +64,14 @@ workday_companies = {
     "Genentech": "https://roche.wd3.myworkdayjobs.com/wday/cxs/roche/ROG-A2O-GENE/jobs"
 }
 
-apps = []
+data = {
+    "Company":[],
+    "Role":[],
+    "Location": [],
+    "Posted On":[],
+    "Link":[],
+    "Days Since":[]
+}
 session = requests.Session()
 session.headers.update(headers)
 
@@ -83,31 +91,36 @@ for k,v in workday_companies.items():
 
         result = response.json()
         for job in result["jobPostings"]:
+            
             role = job.get("title", "N/A")
             if "intern" not in role.lower(): continue
-            
-            location = job.get("locationsText", "N/A")
+            data["Role"].append(role)
+            data["Company"].append(k)
 
+            data["Location"].append(job.get("locationsText", "N/A"))
 
             postedOn = job.get("postedOn", "N/A")
+            data["Posted On"].append(postedOn)
+
+
             link = job.get("externalPath", "N/A")
             base= v.split("/wday/cxs/", 1)[0]
             rest = v.split("/wday/cxs/",1)[1]
             other = rest.split("/", 2)[1]
-            link = f"{base}/en-US/{other}{link}"
-            value = 0 if postedOn == "Posted Today" else 1 if postedOn == "Posted Yesterday" else int(''.join(filter(str.isdigit, postedOn)))
-            apps.append(list((k,role, location, postedOn, link, value)))
+            data["Link"].append(f"{base}/en-US/{other}{link}")
+
+
+            data["Days Since"].append(0 if postedOn == "Posted Today" else 1 if postedOn == "Posted Yesterday" else int(''.join(filter(str.isdigit, postedOn))))
+
+
+            
         
         time.sleep(.3)
 
+df = pd.DataFrame(data)
+df = df[df["Days Since"] != 30]
+df = df.sort_values("Days Since", ascending = True)
 
-rows = sheet.get_all_values()
-header = rows[0]
-filter = [
-    row for row in apps
-    if "30" not in row[3]
-]
-
+values = [df.columns.tolist()] + df.astype(str).values.tolist()
 sheet.clear()
-sheet.update([["Company", "Role", "Location", "Posted On", "Link", "Days Since"], *filter])
-sheet.sort((6,  "asc"))
+sheet.update(values)
