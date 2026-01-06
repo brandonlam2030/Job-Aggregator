@@ -1,23 +1,7 @@
-import requests, gspread, time, os
-from google.oauth2.service_account import Credentials
-from requests.exceptions import ConnectionError
-from dotenv import load_dotenv
-import pandas as pd
-
-load_dotenv("key.env")
-scope_key = os.getenv("scope_key")
-sheet_id = os.getenv("sheet_id")
-
-scopes = [
-    scope_key
-]
-creds = Credentials.from_service_account_file("credentials.json", scopes = scopes)
-client = gspread.authorize(creds)
-
-sheet_id = sheet_id
-sheet = client.open_by_key(sheet_id).sheet1
-
-
+import requests, time
+from requests.exceptions import ConnectionError, Timeout
+from . import models
+from .database import engine, SessionLocal
 
 headers = {"Content-Type": "application/json"}
 payload = {
@@ -64,63 +48,64 @@ workday_companies = {
     "Genentech": "https://roche.wd3.myworkdayjobs.com/wday/cxs/roche/ROG-A2O-GENE/jobs"
 }
 
-data = {
-    "Company":[],
-    "Role":[],
-    "Location": [],
-    "Posted On":[],
-    "Link":[],
-    "Days Since":[]
-}
-session = requests.Session()
-session.headers.update(headers)
+seen = set()
+def create_job(company: str, role: str, location: str, date_posted: str, link: str, days: int,  db):
+    if db.get(models.Job, link): return
+    job = models.Job(Company = company, Role = role, Location = location, Date_Posted = date_posted, Link = link, Days = days)
+    db.add(job)
 
 
-for k,v in workday_companies.items():
-    for page in range(0, 100, 20):
-        payload["offset"] = page
 
-        try:
-            response = session.post(v, json= payload, timeout = 10)
-        except ConnectionError:
-            time.sleep(2)
-            continue
+if __name__ == "__main__":
+    models.Base.metadata.create_all(bind = engine)
 
-        if response.status_code != 200:
-            break
+    db = SessionLocal()
 
-        result = response.json()
-        for job in result["jobPostings"]:
-            
-            role = job.get("title", "N/A")
-            if "intern" not in role.lower(): continue
-            data["Role"].append(role)
-            data["Company"].append(k)
+    session = requests.Session()
+    session.headers.update(headers)
 
-            data["Location"].append(job.get("locationsText", "N/A"))
+    try:
+        for k,v in workday_companies.items():
+            for page in range(0, 100, 20):
+                payload["offset"] = page
 
-            postedOn = job.get("postedOn", "N/A")
-            data["Posted On"].append(postedOn)
+                for attempt in range(3):
+                    try:
+                        response = session.post(v, json= payload, timeout = (3,5))
+                        break
+                    except (ConnectionError, Timeout):
+                        time.sleep(2)
+                else: continue
 
+                if response.status_code != 200:
+                    break
 
-            link = job.get("externalPath", "N/A")
-            base= v.split("/wday/cxs/", 1)[0]
-            rest = v.split("/wday/cxs/",1)[1]
-            other = rest.split("/", 2)[1]
-            data["Link"].append(f"{base}/en-US/{other}{link}")
+                result = response.json()
+                for job in result["jobPostings"]:
+                    
+                    role = job.get("title", "N/A")
+                    if "intern" not in role.lower(): continue
 
+                    location = (job.get("locationsText", "N/A"))
 
-            data["Days Since"].append(0 if postedOn == "Posted Today" else 1 if postedOn == "Posted Yesterday" else int(''.join(filter(str.isdigit, postedOn))))
+                    postedOn = job.get("postedOn", "N/A")
 
+                    link = job.get("externalPath", "N/A")
+                    base= v.split("/wday/cxs/", 1)[0]
+                    rest = v.split("/wday/cxs/",1)[1]
+                    other = rest.split("/", 2)[1]
+                    final_link = (f"{base}/en-US/{other}{link}")
+                    days = (0 if postedOn == "Posted Today" else 1 if postedOn == "Posted Yesterday" else int(''.join(filter(str.isdigit, postedOn))))
+                    if final_link in seen: continue
+                    seen.add(final_link)
+                    create_job(k, role,location,postedOn,final_link, days, db)
 
-            
-        
-        time.sleep(.3)
-
-df = pd.DataFrame(data)
-df = df[df["Days Since"] != 30]
-df = df.sort_values("Days Since", ascending = True)
-
-values = [df.columns.tolist()] + df.astype(str).values.tolist()
-sheet.clear()
-sheet.update(values)
+                    
+                
+                time.sleep(.3)
+        jobs = db.query(models.Job).filter(models.Job.Days >= 30).delete(synchronize_session=False)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+    finally:
+        db.close()

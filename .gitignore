@@ -1,7 +1,13 @@
 @'
 .env
 *.env
-credentials.json
+
+venv/
+.venv/
+
 __pycache__/
 *.pyc
+
+.DS_Store
+.vscode/
 '@ | Set_Content .gitignore
