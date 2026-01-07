@@ -1,7 +1,10 @@
 import requests, time
+from datetime import datetime, timezone
 from requests.exceptions import ConnectionError, Timeout
 from . import models
 from .database import engine, SessionLocal
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.dialects.postgresql import insert
 
 headers = {"Content-Type": "application/json"}
 payload = {
@@ -59,11 +62,10 @@ workday_companies = {
 
 }
 
-seen = set()
-def create_job(company: str, role: str, location: str, date_posted: str, link: str, days: int,  db):
-    if db.get(models.Job, link): return
-    job = models.Job(Company = company, Role = role, Location = location, Date_Posted = date_posted, Link = link, Days = days)
-    db.add(job)
+
+def create_job(company: str, role: str, datefound: datetime, location: str, link: str,  db):
+    job = insert(models.Job).values(Company = company, Role = role, Date_Found = datefound, Location = location, Link = link).on_conflict_do_nothing(index_elements = ["Link"])
+    db.execute(job)
 
 
 
@@ -76,6 +78,8 @@ if __name__ == "__main__":
     session.headers.update(headers)
 
     try:
+        print("enter")
+        date = datetime.now(timezone.utc)
         for k,v in workday_companies.items():
             for page in range(0, 100, 20):
                 payload["offset"] = page
@@ -99,24 +103,24 @@ if __name__ == "__main__":
 
                     location = (job.get("locationsText", "N/A"))
 
-                    postedOn = job.get("postedOn", "N/A")
 
                     link = job.get("externalPath", "N/A")
                     base= v.split("/wday/cxs/", 1)[0]
                     rest = v.split("/wday/cxs/",1)[1]
                     other = rest.split("/", 2)[1]
                     final_link = (f"{base}/en-US/{other}{link}")
-                    days = (0 if postedOn == "Posted Today" else 1 if postedOn == "Posted Yesterday" else int(''.join(filter(str.isdigit, postedOn))))
-                    if final_link in seen: continue
-                    seen.add(final_link)
-                    create_job(k, role,location,postedOn,final_link, days, db)
+                    create_job(k, role,date, location, final_link, db)
+                try:
+                    db.commit()
+                except IntegrityError:
+                    db.rollback()
 
                     
                 
                 time.sleep(.3)
-        jobs = db.query(models.Job).filter(models.Job.Days >= 30).delete(synchronize_session=False)
-        db.commit()
     except Exception as e:
+        print("fail", repr(e))
         db.rollback()
     finally:
+        print("done")
         db.close()
