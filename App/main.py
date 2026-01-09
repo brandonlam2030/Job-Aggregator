@@ -16,7 +16,6 @@ payload = {
 }
 
 workday_companies = {
-    #Big Tech
     "Nvidia": "https://nvidia.wd5.myworkdayjobs.com/wday/cxs/nvidia/NVIDIAExternalCareerSite/jobs",
     "Intel": "https://intel.wd1.myworkdayjobs.com/wday/cxs/intel/External/jobs",
     "Salesforce": "https://salesforce.wd12.myworkdayjobs.com/wday/cxs/salesforce/External_Career_Site/jobs",
@@ -57,9 +56,7 @@ workday_companies = {
     "Dexcom": "https://dexcom.wd1.myworkdayjobs.com/wday/cxs/dexcom/Dexcom/jobs",
     "Walmart": "https://walmart.wd5.myworkdayjobs.com/wday/cxs/walmart/WalmartExternal/jobs",
     "Ribbon": "https://vhr-genband.wd1.myworkdayjobs.com/wday/cxs/vhr_genband/ribboncareers/jobs",
-    "Aerospace Company": "https://aero.wd5.myworkdayjobs.com/wday/cxs/aero/External/jobs",
-
-
+    "Aerospace Company": "https://aero.wd5.myworkdayjobs.com/wday/cxs/aero/External/jobs"
 }
 
 
