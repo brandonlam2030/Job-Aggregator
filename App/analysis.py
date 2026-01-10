@@ -1,6 +1,7 @@
 import pandas as pd
-import matplotlib as plt
+import matplotlib.pyplot as plt
 from .database import engine
+import numpy as np
 
 conn = engine.connect()
 subcategories = {
@@ -18,7 +19,7 @@ subcategories = {
         "%drug discovery%", "%computational biology%", "%bioinformatics%"
     ],
 
-    "SWE_BACKEND": [
+    "SWE_Backend": [
         "%software engineer%", "%software engineering%",
         "%backend%", "%server%", "%api%",
         "%systems%", "%system software%",
@@ -32,7 +33,7 @@ subcategories = {
         "%storage%", "%filesystem%"
     ],
 
-    "SWE_FRONTEND": [
+    "SWE_Frontend": [
         "%frontend%", "%front end%",
         "%full stack%", "%full-stack%",
         "%ui%", "%ux%",
@@ -49,16 +50,6 @@ subcategories = {
         "%siem%", "%soc%", "%penetration testing%", "%pentest%",
         "%vulnerability%", "%zero trust%"
     ],
-
-    "IT": [
-        "%it support%", "%help desk%", "%helpdesk%",
-        "%desktop support%", "%service desk%",
-        "%system administrator%", "%sysadmin%",
-        "%network administrator%",
-        "%active directory%", "%windows server%",
-        "%o365%", "%azure ad%", "%vmware%"
-    ],
-
     "Hardware": [
         "%hardware%", "%asic%", "%soc%",
         "%vlsi%", "%rtl%",
@@ -79,7 +70,7 @@ subcategories = {
         "%requirements%", "%prd%",
         "%stakeholders%", "%go-to-market%"
     ],
-    "EMBEDDED_ROBOTICS": [
+    "Embedded Robotics": [
         "%embedded%", "%firmware%",
         "%robot%", "%robotics%",
         "%autonomous%", "%autonomous driving%",
@@ -96,8 +87,38 @@ subcategories = {
 df = {}
 
 for k,v in subcategories.items():
-    df[k] = pd.read_sql('SELECT "Company", "Role" FROM "Jobs" WHERE "Role" ILIKE ANY (%s)', conn, params = (v,))
+    df[k] = pd.read_sql('SELECT "Company", "Role", "Date_Found"  FROM "Jobs" WHERE "Role" ILIKE ANY (%s)', conn, params = (v,)).set_index("Date_Found")
 
-for topic, frame in df.items():
-    print("\n\n",topic)
-    print(frame)
+
+x = df["ML/AI"].groupby(level = "Date_Found", sort = True).nunique().index
+graph_data = pd.DataFrame()
+
+for group in df:
+    counts = pd.Series(df[group].index).value_counts().sort_index(ascending = True)
+    counts = counts.reindex(x, fill_value = 0)
+    cum_counts = counts.cumsum()
+    graph_data[group] = cum_counts
+
+
+percentages = graph_data.pct_change()
+percentages.dropna(inplace = True)
+print("\n\nNumber of Openings per Day:\n", graph_data.to_string())
+print("\n\nPercent Growth in Opportunity:\n", percentages.to_string())
+
+
+plt.subplot(1,2,1)
+plt.plot(percentages)
+plt.xlabel("Dates")
+plt.ylabel("Percent Growth in Respective Fields")
+plt.legend(list(subcategories.keys()))
+plt.ylim(0, .3)
+
+
+plt.subplot(1,2,2)
+plt.plot(graph_data)
+plt.xlabel("Dates")
+plt.ylabel("Number of Openings")
+plt.legend(list(subcategories.keys()))
+
+plt.show()
+
