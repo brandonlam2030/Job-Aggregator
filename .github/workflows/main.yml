@@ -1,6 +1,6 @@
 name: run main.py
 permissions:
-  contents: write
+  contents: read
 
 on:
   workflow_dispatch:
