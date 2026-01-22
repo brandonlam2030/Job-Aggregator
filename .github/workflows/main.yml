@@ -25,7 +25,7 @@ jobs:
           
       - name: execute py script # run main.py
         env:
-          SQLALCHEMY_DATABSE_URL: ${{ secrets.SQLALCHEMY_DATABASE_URL }}
+          SQLALCHEMY_DATABASE_URL: ${{ secrets.SQLALCHEMY_DATABASE_URL }}
         run: python -m App.main
           
       - name: commit files
