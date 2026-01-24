@@ -5,6 +5,9 @@
 venv/
 .venv/
 
+archive/resumes/
+*.docx 
+
 __pycache__/
 *.pyc
 

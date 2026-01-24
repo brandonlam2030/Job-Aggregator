@@ -10,3 +10,10 @@ class Job(Base):
     Date_Found = Column(DateTime, nullable = False)
     Location = Column(String, nullable = False)
     Link = Column(String, nullable = False, primary_key = True)    
+
+
+class Resume(Base):
+    __tablename__ = "Resume"
+
+    id = Column(Integer, nullable = False, primary_key = True)
+    Content = Column(String, nullable = False)
