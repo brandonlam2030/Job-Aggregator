@@ -4,6 +4,7 @@ import pandas as pd
 from . import models
 from .database import engine, SessionLocal
 from sqlalchemy.dialects.postgresql import insert
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 
@@ -29,5 +30,8 @@ try:
 except Exception as e: 
     print("fail", repr(e))
     db.rollback()
-finally: 
-    db.close()
+
+tfidf = TfidfVectorizer()
+column = db.query(models.Resume).first()
+result = tfidf.fit_transform([column.Content])
+print(result)
