@@ -5,15 +5,26 @@ from . import models
 from .database import engine, SessionLocal
 from sqlalchemy.dialects.postgresql import insert
 from sklearn.feature_extraction.text import TfidfVectorizer
+import re
+import string
 
 
 
 db = SessionLocal()
+models.Base.metadata.create_all(bind = engine)
 def extract(file):
     doc = Document(file)
 
-    string = "\n".join(p.text for p in doc.paragraphs if p.text.strip())
-    job = insert(models.Resume).values(Content = string)
+    s = "\n".join(p.text.lower() for p in doc.paragraphs if p.text.strip())
+
+    normal = str.maketrans("","", string.punctuation)
+    s = s.translate(normal)
+
+    s = re.sub(r"\d", "", s)
+    s = re.sub(" +", " ", s)
+
+
+    job = insert(models.Resume).values(Content = s)
     db.execute(job)
 
     return 
@@ -31,7 +42,21 @@ except Exception as e:
     print("fail", repr(e))
     db.rollback()
 
-tfidf = TfidfVectorizer()
-column = db.query(models.Resume).first()
-result = tfidf.fit_transform([column.Content])
-print(result)
+
+
+
+resumes = [
+    r.Content
+    for r in db.query(models.Resume).all()
+    if r.Content and r.Content.strip()
+]
+tfidf = TfidfVectorizer(stop_words = "english", min_df = 2, max_df =.85, ngram_range = (1,2))
+result = tfidf.fit_transform(resumes)
+terms = tfidf.get_feature_names_out()
+
+
+
+
+print(terms)
+
+
