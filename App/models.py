@@ -17,3 +17,4 @@ class Resume(Base):
 
     id = Column(Integer, nullable = False, primary_key = True)
     Content = Column(String, nullable = False)
+    Normalized = Column(String, nullable = False)

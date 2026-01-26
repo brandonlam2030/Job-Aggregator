@@ -12,20 +12,41 @@ import string
 
 db = SessionLocal()
 models.Base.metadata.create_all(bind = engine)
+
+skills = {
+    r"machine.learning": "machine learning",
+    r"c\+\+": "cpp",
+    r"node[\. ]?js": "nodejs",
+    r"\bsoftware[\.\-\s]?engineer(ing)?\b": "software engineer",
+    r"\bhtml\d*\b":"html",
+    r"angular[\. ]?js":"angularjs",
+    r"\bcss\d*\b":"css",
+    r"\b(postgresql|mysql|mariadb|sqlite|sql\s*server)\b": "sql",
+    r"c#":"csharp"
+
+
+
+}
+
 def extract(file):
     doc = Document(file)
 
-    s = "\n".join(p.text.lower() for p in doc.paragraphs if p.text.strip())
+    temp = "\n".join(p.text.lower() for p in doc.paragraphs if p.text.strip())
+
 
     normal = str.maketrans("","", string.punctuation)
-    s = s.translate(normal)
+    s = temp.translate(normal)
 
     s = re.sub(r"\d", "", s)
     s = re.sub(" +", " ", s)
+    
+    for k,v in skills.items():
+        s = re.sub(k,v,s)
+    
 
-
-    job = insert(models.Resume).values(Content = s)
-    db.execute(job)
+    if temp and s:
+        job = insert(models.Resume).values(Content = temp, Normalized = s)
+        db.execute(job)
 
     return 
 
@@ -45,6 +66,8 @@ except Exception as e:
 
 
 
+
+
 resumes = [
     r.Content
     for r in db.query(models.Resume).all()
@@ -54,9 +77,5 @@ tfidf = TfidfVectorizer(stop_words = "english", min_df = 2, max_df =.85, ngram_r
 result = tfidf.fit_transform(resumes)
 terms = tfidf.get_feature_names_out()
 
-
-
-
-print(terms)
 
 
