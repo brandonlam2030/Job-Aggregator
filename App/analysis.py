@@ -69,9 +69,9 @@ except Exception as e:
 
 
 resumes = [
-    r.Content
+    r.Normalized
     for r in db.query(models.Resume).all()
-    if r.Content and r.Content.strip()
+    if r.Normalized and r.Normalized.strip()
 ]
 tfidf = TfidfVectorizer(stop_words = "english", min_df = 2, max_df =.85, ngram_range = (1,2))
 result = tfidf.fit_transform(resumes)
