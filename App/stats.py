@@ -103,7 +103,7 @@ for group in df:
 percentages = graph_data.pct_change()
 percentages.dropna(inplace = True)
 print("\n\nNumber of Openings per Day:\n", graph_data.to_string())
-print("\n\nPercent Growth in Opportunity:\n", percentages.to_string())
+print("\n\nPercent Growth in Opportunity:\n", (percentages*100).to_string())
 
 
 plt.subplot(1,2,1)
