@@ -8,10 +8,11 @@ from sqlalchemy.dialects.postgresql import insert
 
 headers = {"Content-Type": "application/json"}
 payload = {
-    "appliedFacets":{},
+    
+    "appliedFacets":{"employmentType":["Internship"]},
     "limit":20,
     "offset":0,
-    "searchText": "computer science intern",
+    "searchText": "",
     "totalSelectedFacetsCount": 0
 }
 
@@ -56,14 +57,79 @@ workday_companies = {
     "Dexcom": "https://dexcom.wd1.myworkdayjobs.com/wday/cxs/dexcom/Dexcom/jobs",
     "Walmart": "https://walmart.wd5.myworkdayjobs.com/wday/cxs/walmart/WalmartExternal/jobs",
     "Ribbon": "https://vhr-genband.wd1.myworkdayjobs.com/wday/cxs/vhr_genband/ribboncareers/jobs",
-    "Aerospace Company": "https://aero.wd5.myworkdayjobs.com/wday/cxs/aero/External/jobs"
+    "Aerospace Company": "https://aero.wd5.myworkdayjobs.com/wday/cxs/aero/External/jobs",
+    "PWC": "https://pwc.wd3.myworkdayjobs.com/wday/cxs/pwc/Global_Experienced_Careers/jobs"
 }
+terms = [
+    "machine learning", "ml", "ai", "artificial intelligence",
+    "deep learning", "neural", "nlp", "speech recognition",
+    "computer vision", "vision language", "multimodal",
+    "reinforcement learning", "rl",
+    "world model", "agent", "agentic",
+    "foundation model", "large language model", "llm",
+    "model alignment", "model scaling",
+    "applied research", "research scientist",
+    "mlops", "ml infrastructure",
+    "data scientist", "data science",
+    "drug discovery", "computational biology", "bioinformatics",
+
+    "software engineer", "software engineering",
+    "backend", "server", "api",
+    "systems", "system software",
+    "distributed", "platform",
+    "infrastructure", "cloud",
+    "devops", "ci/cd",
+    "cuda", "gpu software",
+    "compiler", "llvm",
+    "performance", "profiling",
+    "test development", "validation",
+    "storage", "filesystem",
+
+    "frontend", "front end",
+    "full stack", "full-stack",
+    "ui", "ux",
+    "visualization", "hci",
+    "web", "dashboard",
+    "design and development",
+
+    "cybersecurity", "security engineer", "security analyst",
+    "application security", "appsec",
+    "cloud security", "iam",
+    "threat detection", "incident response",
+    "siem", "soc", "penetration testing", "pentest",
+    "vulnerability", "zero trust",
+
+    "hardware", "asic", "soc",
+    "vlsi", "rtl",
+    "verification", "dft",
+    "physical design", "floorplan",
+    "bring-up",
+    "circuit", "analog", "mixed-signal",
+    "photonic", "photonics",
+    "ic design", "chip",
+    "computer architecture", "microarchitecture",
+    "serdes",
+
+    "product manager", "product management",
+    "technical product manager", "tpm",
+    "roadmap", "product strategy",
+    "requirements", "prd",
+    "stakeholders", "go-to-market",
+
+    "embedded", "firmware",
+    "robot", "robotics",
+    "autonomous", "autonomous driving",
+    "av", "vehicle",
+    "simulation", "digital twin",
+    "real-time", "control",
+    "sensor", "lidar",
+    "embedded software"
+]
 
 
 def create_job(company: str, role: str, datefound: datetime, location: str, link: str,  db):
     job = insert(models.Job).values(Company = company, Role = role, Date_Found = datefound, Location = location, Link = link).on_conflict_do_nothing(index_elements = ["Link"])
     db.execute(job)
-
 
 
 if __name__ == "__main__":
@@ -93,20 +159,19 @@ if __name__ == "__main__":
                     break
 
                 result = response.json()
+                if not result.get("jobPostings"): break
                 for job in result["jobPostings"]:
                     
-                    role = job.get("title", "N/A")
-                    if "intern" not in role.lower(): continue
+                    role = job.get("title", "N/A").lower()
 
-                    location = (job.get("locationsText", "N/A"))
-
-
-                    link = job.get("externalPath", "N/A")
-                    base= v.split("/wday/cxs/", 1)[0]
-                    rest = v.split("/wday/cxs/",1)[1]
-                    other = rest.split("/", 2)[1]
-                    final_link = (f"{base}/en-US/{other}{link}")
-                    create_job(k, role,date, location, final_link, db)
+                    if any(term in role for term in terms):
+                        location = (job.get("locationsText", "N/A"))
+                        link = job.get("externalPath", "N/A")
+                        base= v.split("/wday/cxs/", 1)[0]
+                        rest = v.split("/wday/cxs/",1)[1]
+                        other = rest.split("/", 2)[1]
+                        final_link = (f"{base}/en-US/{other}{link}")
+                        create_job(k, role,date, location, final_link, db)
                 try:
                     db.commit()
                 except IntegrityError:
