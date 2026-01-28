@@ -125,13 +125,23 @@ terms = [
     "sensor", "lidar",
     "embedded software"
 ]
+interns = [
+    "intern",
+    "internship",
+    "co-op",
+    "coop",
+    "co operative",
+    "student",
+    "summer",
+    "graduate intern"
+]
 
 
 def create_job(company: str, role: str, datefound: datetime, location: str, link: str,  db):
     job = insert(models.Job).values(Company = company, Role = role, Date_Found = datefound, Location = location, Link = link).on_conflict_do_nothing(index_elements = ["Link"])
     db.execute(job)
 
-
+roles = 
 if __name__ == "__main__":
     models.Base.metadata.create_all(bind = engine)
 
@@ -163,7 +173,8 @@ if __name__ == "__main__":
                 for job in result["jobPostings"]:
                     
                     role = job.get("title", "N/A").lower()
-
+                    if not any(intern in role for intern in interns): continue
+                    
                     if any(term in role for term in terms):
                         location = (job.get("locationsText", "N/A"))
                         link = job.get("externalPath", "N/A")
