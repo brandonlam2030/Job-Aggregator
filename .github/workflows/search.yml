@@ -28,4 +28,4 @@ jobs:
       - name: execute py script
         env:
           SQLALCHEMY_DATABASE_URL: ${{ secrets.SQLALCHEMY_DATABASE_URL }}
-        run: python -m App.main
+        run: python -m App.temp

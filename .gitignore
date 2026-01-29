@@ -11,6 +11,10 @@ archive/resumes/
 __pycache__/
 *.pyc
 
+buffer/
+*.parquet
+
+
 .DS_Store
 .vscode/
 '@ | Set_Content .gitignore
