@@ -1,4 +1,4 @@
-import requests, time
+import requests, time, re
 from datetime import datetime, timezone
 from requests.exceptions import ConnectionError, Timeout
 from . import models
@@ -137,6 +137,8 @@ interns = [
 ]
 
 
+job_terms = re.compile(r"\b(" + "|".join(re.escape(t) for t in terms) + r")\b")
+type_terms = re.compile(r"\b(" + "|".join(re.escape(t) for t in interns) + r")\b")
 def create_job(company: str, role: str, datefound: datetime, location: str, link: str,  db):
     job = insert(models.Job).values(Company = company, Role = role, Date_Found = datefound, Location = location, Link = link).on_conflict_do_nothing(index_elements = ["Link"])
     db.execute(job)
@@ -172,9 +174,9 @@ if __name__ == "__main__":
                 for job in result["jobPostings"]:
                     
                     role = job.get("title", "N/A").lower()
-                    if not any(intern in role for intern in interns): continue
+                    if not bool(type_terms.search(role)): continue
 
-                    if any(term in role for term in terms):
+                    if bool(job_terms.search(role)):
                         location = (job.get("locationsText", "N/A"))
                         link = job.get("externalPath", "N/A")
                         base= v.split("/wday/cxs/", 1)[0]
