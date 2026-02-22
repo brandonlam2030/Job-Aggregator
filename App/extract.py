@@ -1,9 +1,14 @@
 from docx import Document
 from pathlib import Path
 import string, re
+import duckdb
 from sqlalchemy.dialects.postgresql import insert
 from . import models
 from .database import engine, SessionLocal
+
+
+#extract.py retrives and normalizes information about resumes contains in the Kaggle dataset
+
 
 
 headers = {

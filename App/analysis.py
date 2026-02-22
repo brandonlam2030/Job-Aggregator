@@ -6,7 +6,7 @@ from .extract import headers, clean
 from . import models
 from .database import engine, SessionLocal
 
-
+#analysis.py is a lightweight NLP that optimizes resumes for certain jobs
 
 db = SessionLocal()
 models.Base.metadata.create_all(bind = engine)

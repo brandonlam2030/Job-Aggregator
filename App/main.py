@@ -6,6 +6,9 @@ from .database import engine, SessionLocal
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.dialects.postgresql import insert
 
+#main.py scrapes current listings on a 10 minute cron scheduler and posts data to PostgreSQL DB
+
+
 headers = {"Content-Type": "application/json"}
 payload = {
     

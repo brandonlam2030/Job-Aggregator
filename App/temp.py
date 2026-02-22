@@ -4,6 +4,7 @@ from requests.exceptions import ConnectionError, Timeout
 import pandas as pd
 from pathlib import Path
 
+#temp.py is a parquet uploader in situations where PostgreSQL DB quota is at limit
 
 headers = {"Content-Type": "application/json"}
 payload = {

@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 from .database import engine
 import numpy as np
 
+#stats.py analyzes growth in respective CS fields and graphs collected data
+
+
 conn = engine.connect()
 subcategories = {
     "ML/AI": [
