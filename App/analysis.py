@@ -1,52 +1,56 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 import requests, time
 from bs4 import BeautifulSoup
+import duckdb
 from .extract import headers, clean
-from . import models
-from .database import engine, SessionLocal
+from requests.exceptions import RequestException
+
 
 #analysis.py is a lightweight NLP that optimizes resumes for certain jobs
 
-db = SessionLocal()
-models.Base.metadata.create_all(bind = engine)
-
-resumes = [
-    r.Normalized
-    for r in db.query(models.Resume).all()
-    if r.Normalized and r.Normalized.strip()
-]
-tfidf = TfidfVectorizer(stop_words = "english", min_df = 2, max_df =.85, ngram_range = (1,2))
-result = tfidf.fit_transform(resumes)
-terms = tfidf.get_feature_names_out()
+con = duckdb.connect("jobs.duckDB")
 
 
-# links = pd.Series(db.query(models.Job.Link).all())
-
-
-
-initial = ["https://autodesk.wd1.myworkdayjobs.com/en-US/Ext/job/Toronto-ON-CAN/Intern--Construction-UX-Research_25WD94406-1"]
+links = con.execute("SELECT * FROM jobs;").df()["Link"]
 final = []
 text = []
-for link in initial:
+for link in links:
     temp = link.split("/")
     company = temp[2].split(".")[0]
     final.append(temp[0] + "//" + temp[2] + "/wday/cxs/" + company + "/" + temp[4] + "/" + temp[5] + "/" + temp[6] + "/" + temp[7])
 
-
+c=0
 for link in final:
     for attempt in range(3):
         try:
             resp = requests.get(link, headers= headers, timeout = 10)
-            res = resp.json()
+
+            if resp.status_code != 200:
+                c+=1
+                break
+            
+            try:
+                res = resp.json()
+            except: 
+                break
+            
+            if "jobPostingInfo" not in res:
+                break
             words = BeautifulSoup(res["jobPostingInfo"]["jobDescription"], "html.parser").get_text(strip = True, separator = " ")
             text.append(clean(words))
             break
-        except: time.sleep(2)
+        except RequestException: time.sleep(2)
 
-series = pd.Series(text)
-tfidf = TfidfVectorizer(stop_words = "english", min_df = 0.0, max_df =1, ngram_range = (1,2))
-print(series)
-text_result = tfidf.fit_transform(series)
-print(text_result)
-print(tfidf.get_feature_names_out())
+resumes = con.execute("SELECT * FROM resumes").df()["Normalized"]
+tfidf = TfidfVectorizer(stop_words = "english", min_df = 2, max_df =.85, ngram_range = (1,2))
+
+corpus = resumes.to_list() + text
+result = tfidf.fit_transform(corpus)
+x = result[:len(resumes.to_list())]
+y = result[len(resumes.to_list()):]
+
+
+similarities = cosine_similarity(x,y)
+print(similarities)
