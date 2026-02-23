@@ -1,7 +1,6 @@
 from docx import Document
 from pathlib import Path
 import string, re
-import duckdb
 from sqlalchemy.dialects.postgresql import insert
 from . import models
 from .database import engine, SessionLocal
@@ -15,9 +14,10 @@ headers = {
     "Content-Type": "application/json"
 }
 
-
 db = SessionLocal()
 models.Base.metadata.create_all(bind = engine)
+
+current = [r for r in db.query(models.Resume.Content).all()]
 
 skills = {
     r"machine.learning": "machine learning",
@@ -55,7 +55,7 @@ def extract(file):
     s = clean(temp)
     
 
-    if temp and s:
+    if temp and s and temp not in current:
         job = insert(models.Resume).values(Content = temp, Normalized = s)
         db.execute(job)
 
@@ -64,9 +64,9 @@ def extract(file):
 
 
 directory_path = Path("archive/Resumes")
-for person in directory_path.iterdir():
-
-    extract(person)
+if __name__ == "__main__":
+    for person in directory_path.iterdir():
+        extract(person)
 
 try: 
     db.commit()
