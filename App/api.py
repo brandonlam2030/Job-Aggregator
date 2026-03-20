@@ -6,6 +6,7 @@ from sqlalchemy import select
 from pydantic import BaseModel
 from datetime import datetime
 from bs4 import BeautifulSoup
+from fastapi.middleware.cors import CORSMiddleware
 
 
 class JobInfo(BaseModel):
@@ -35,6 +36,13 @@ headers = {
 
 app = FastAPI()
 models.Base.metadata.create_all(bind = engine)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def start_db():
     db = SessionLocal()
