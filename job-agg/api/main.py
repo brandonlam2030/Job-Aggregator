@@ -1,7 +1,7 @@
 from fastapi import Depends, FastAPI
 import requests,time
-from . import models
-from .database import engine, SessionLocal
+import models
+from database import engine, SessionLocal
 from sqlalchemy import select
 from pydantic import BaseModel
 from datetime import datetime
