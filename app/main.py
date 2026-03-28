@@ -1,6 +1,6 @@
 from fastapi import Depends, FastAPI
 import requests,time
-from . import models
+import app.models as models
 from .database import engine, SessionLocal
 from sqlalchemy import select
 from pydantic import BaseModel
