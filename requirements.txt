@@ -10,3 +10,5 @@ python-dotenv==1.2.2
 Requests==2.33.0
 scikit_learn==1.8.0
 SQLAlchemy==2.0.48
+psycopg==3.3.2
+psycopg-binary==3.3.2
