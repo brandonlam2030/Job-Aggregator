@@ -1,12 +1,13 @@
 from fastapi import Depends, FastAPI
 import requests,time
-from . import models
+from App.models import models
 from .database import engine, SessionLocal
 from sqlalchemy import select
 from pydantic import BaseModel
 from datetime import datetime
 from bs4 import BeautifulSoup
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
 
 class JobInfo(BaseModel):
@@ -57,10 +58,10 @@ def read_root():
     return {"Hello": "World"}
 
 @app.get("/jobs", response_model = list[JobInfo])
-def get_jobs(session: requests.Session = Depends(start_db), limit:int = 10, offset:int = 0):
+def get_jobs(session: Session = Depends(start_db), limit:int = 10, offset:int = 0):
     return session.execute(select(models.Job).limit(limit).offset(offset).order_by(models.Job.Date_Found.desc())).scalars().all()
 
-@app.get("/jobs/{search}",response_model = list[JobInfo])
+@app.get("/jobs/{company}",response_model = list[JobInfo])
 def get_specific_job(company: str, session: requests.Session = Depends(start_db), limit:int = 10, offset:int = 0):
     return session.execute(select(models.Job).where(models.Job.Company.ilike(company)).limit(limit).offset(offset).order_by(models.Job.Date_Found.desc())).scalars().all()
 
