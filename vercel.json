@@ -1,5 +1,4 @@
 {
-  "rootDirectory": "job-agg",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/app/main.py" }
   ]
