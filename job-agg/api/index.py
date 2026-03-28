@@ -53,10 +53,6 @@ def start_db():
         db.close()
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
 @app.get("/jobs", response_model = list[JobInfo])
 def get_jobs(session: Session = Depends(start_db), limit:int = 10, offset:int = 0):
     return session.execute(select(models.Job).limit(limit).offset(offset).order_by(models.Job.Date_Found.desc())).scalars().all()
