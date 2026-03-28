@@ -9,4 +9,5 @@ python-dotenv==1.2.1
 uvicorn==0.40.0
 greenlet==3.3.0
 starlette==0.50.0
+psycopg-binary==3.3.2
 lxml
