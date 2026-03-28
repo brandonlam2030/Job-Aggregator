@@ -18,7 +18,7 @@ export default function Home() {
   
   useEffect(() => {
     const fetchJobs = async () => {
-      const response = await api.get(`/jobs?offset=${page}` )
+      const response = await api.get(`/api/jobs?offset=${page}` )
       setJobs(prev => [...prev, ...response.data])
     }
     fetchJobs()
