@@ -6,7 +6,7 @@ import os
 
 #database.py establishes DB connection
 
-load_dotenv("key.env")
+load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
 
