@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Integer, DateTime
 from datetime import datetime, timezone
-from .database import Base
+from database import Base
 
 #models.py defines two tables within our PostgreSQL DB
 
