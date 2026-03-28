@@ -1,8 +1,8 @@
 import requests, time, re
 from datetime import datetime, timezone
 from requests.exceptions import ConnectionError, Timeout
-from app.models import models
-from app.database import engine, SessionLocal
+from . import models
+from .database import engine, SessionLocal
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.dialects.postgresql import insert
 
