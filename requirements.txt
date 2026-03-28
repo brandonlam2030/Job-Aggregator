@@ -1,0 +1,12 @@
+beautifulsoup4==4.14.3
+docx==0.2.4
+duckdb==1.5.1
+fastapi==0.135.2
+matplotlib==3.10.8
+numpy==2.4.3
+pandas==3.0.1
+pydantic==2.12.5
+python-dotenv==1.2.2
+Requests==2.33.0
+scikit_learn==1.8.0
+SQLAlchemy==2.0.48
