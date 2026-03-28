@@ -1,6 +1,5 @@
 {
-  "buildCommand": "cd job-agg && npm run build",
-  "outputDirectory": "job-agg/.next",
+  "rootDirectory": "job-agg",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/app/main.py" }
   ]
