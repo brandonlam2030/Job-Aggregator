@@ -19,3 +19,6 @@ jobs.duckdb
 .DS_Store
 .vscode/
 '@ | Set_Content .gitignore
+
+node_modules/
+.next
