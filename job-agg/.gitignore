@@ -41,3 +41,6 @@ node_modules/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.next/
+node_modules/
