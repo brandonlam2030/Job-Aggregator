@@ -40,7 +40,9 @@ models.Base.metadata.create_all(bind = engine)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000",
+                   "https://job-aggregator-kohl.vercel.app"
+                   ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -53,15 +55,15 @@ def start_db():
         db.close()
 
 
-@app.get("/jobs", response_model = list[JobInfo])
+@app.get("/api/jobs", response_model = list[JobInfo])
 def get_jobs(session: Session = Depends(start_db), limit:int = 10, offset:int = 0):
     return session.execute(select(models.Job).limit(limit).offset(offset).order_by(models.Job.Date_Found.desc())).scalars().all()
 
-@app.get("/jobs/{company}",response_model = list[JobInfo])
+@app.get("/api/jobs/{company}",response_model = list[JobInfo])
 def get_specific_job(company: str, session: requests.Session = Depends(start_db), limit:int = 10, offset:int = 0):
     return session.execute(select(models.Job).where(models.Job.Company.ilike(company)).limit(limit).offset(offset).order_by(models.Job.Date_Found.desc())).scalars().all()
 
-@app.post("/jobs/description")
+@app.post("/api/jobs/description")
 def get_description(body: JobDescription):
     url = getLink(body.url)
     print(url)
